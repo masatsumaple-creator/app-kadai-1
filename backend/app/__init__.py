@@ -17,8 +17,10 @@ def create_app():
 
     from .routes.health import health_bp
     from .routes.transactions import transactions_bp
+    from .routes.categories import categories_bp
     app.register_blueprint(health_bp)
     app.register_blueprint(transactions_bp)
+    app.register_blueprint(categories_bp)
 
     from .seed import register_seed_command
     register_seed_command(app)
