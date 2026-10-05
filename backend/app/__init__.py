@@ -16,7 +16,9 @@ def create_app():
     from . import models  # noqa: F401  (ensure models are registered with SQLAlchemy)
 
     from .routes.health import health_bp
+    from .routes.transactions import transactions_bp
     app.register_blueprint(health_bp)
+    app.register_blueprint(transactions_bp)
 
     from .seed import register_seed_command
     register_seed_command(app)
