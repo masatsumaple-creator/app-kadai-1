@@ -42,9 +42,61 @@ def _validate_payload(data, *, require_all):
     return errors
 
 
+def _parse_filters(args):
+    errors = {}
+
+    from_date = to_date = None
+    if args.get("from"):
+        from_date = _parse_date(args["from"])
+        if from_date is None:
+            errors["from"] = "must be an ISO date (YYYY-MM-DD)"
+    if args.get("to"):
+        to_date = _parse_date(args["to"])
+        if to_date is None:
+            errors["to"] = "must be an ISO date (YYYY-MM-DD)"
+
+    category_id = args.get("category_id")
+    if category_id is not None:
+        try:
+            category_id = int(category_id)
+        except ValueError:
+            errors["category_id"] = "must be an integer"
+
+    type_ = args.get("type")
+    if type_ is not None and type_ not in TRANSACTION_TYPES:
+        errors["type"] = f"must be one of {TRANSACTION_TYPES}"
+
+    return (
+        {
+            "from_date": from_date,
+            "to_date": to_date,
+            "category_id": category_id,
+            "type": type_,
+            "keyword": args.get("keyword"),
+        },
+        errors,
+    )
+
+
 @transactions_bp.get("")
 def list_transactions():
-    transactions = Transaction.query.order_by(Transaction.date.desc(), Transaction.id.desc()).all()
+    filters, errors = _parse_filters(request.args)
+    if errors:
+        return jsonify(errors=errors), 400
+
+    query = Transaction.query
+    if filters["from_date"]:
+        query = query.filter(Transaction.date >= filters["from_date"])
+    if filters["to_date"]:
+        query = query.filter(Transaction.date <= filters["to_date"])
+    if filters["category_id"] is not None:
+        query = query.filter(Transaction.category_id == filters["category_id"])
+    if filters["type"]:
+        query = query.filter(Transaction.type == filters["type"])
+    if filters["keyword"]:
+        query = query.filter(Transaction.memo.ilike(f"%{filters['keyword']}%"))
+
+    transactions = query.order_by(Transaction.date.desc(), Transaction.id.desc()).all()
     return jsonify([t.to_dict() for t in transactions])
 
 
