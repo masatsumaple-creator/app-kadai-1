@@ -3,7 +3,9 @@ import { computed, onMounted, reactive, ref } from "vue";
 import {
   createTransaction,
   deleteTransaction,
+  exportTransactions,
   fetchTransactions,
+  importTransactions,
   updateTransaction,
 } from "../api/transactions";
 import { fetchCategories } from "../api/categories";
@@ -135,6 +137,37 @@ async function removeTransaction(id) {
   await deleteTransaction(id);
   await applyFilters();
 }
+
+async function handleExport() {
+  const blob = await exportTransactions();
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "transactions.csv";
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+const importResult = ref(null);
+const importing = ref(false);
+const fileInput = ref(null);
+
+async function handleImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  importing.value = true;
+  importResult.value = null;
+  try {
+    importResult.value = await importTransactions(file);
+    await applyFilters();
+  } catch (e) {
+    importResult.value = { imported: 0, failed: 0, errors: [], message: "インポートに失敗しました" };
+  } finally {
+    importing.value = false;
+    if (fileInput.value) fileInput.value.value = "";
+  }
+}
 </script>
 
 <template>
@@ -190,6 +223,34 @@ async function removeTransaction(id) {
         <button v-if="editingId" type="button" @click="cancelEdit">キャンセル</button>
       </div>
     </form>
+
+    <div class="csv-io">
+      <h2>CSV入出力</h2>
+      <div class="csv-actions">
+        <button type="button" @click="handleExport">CSVエクスポート</button>
+        <label class="file-input-label">
+          CSVインポート
+          <input
+            ref="fileInput"
+            type="file"
+            accept=".csv,text/csv"
+            :disabled="importing"
+            @change="handleImport"
+          />
+        </label>
+      </div>
+      <div v-if="importResult" class="import-result">
+        <p v-if="importResult.message" class="error">{{ importResult.message }}</p>
+        <p v-else>
+          {{ importResult.imported }}件インポートしました（失敗: {{ importResult.failed }}件）
+        </p>
+        <ul v-if="importResult.errors && importResult.errors.length > 0" class="import-errors">
+          <li v-for="(err, i) in importResult.errors" :key="i">
+            {{ err.line }}行目: {{ Object.values(err.errors).join(" / ") }}
+          </li>
+        </ul>
+      </div>
+    </div>
 
     <form class="filter-form" @submit.prevent="applyFilters">
       <h2>絞り込み</h2>
@@ -284,6 +345,42 @@ async function removeTransaction(id) {
   flex-basis: 100%;
   font-size: 1.1rem;
   margin: 0;
+}
+
+.csv-io {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.csv-io h2 {
+  font-size: 1rem;
+  margin: 0 0 0.75rem;
+}
+
+.csv-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.file-input-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.import-result {
+  margin-top: 0.75rem;
+}
+
+.import-errors {
+  margin: 0.5rem 0 0;
+  padding-left: 1.25rem;
+  font-size: 0.85rem;
+  color: #c0392b;
 }
 
 .filter-form {
