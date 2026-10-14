@@ -9,6 +9,7 @@ import {
   updateTransaction,
 } from "../api/transactions";
 import { fetchCategories } from "../api/categories";
+import { ja } from "date-fns/locale";
 
 const transactions = ref([]);
 const categories = ref([]);
@@ -179,7 +180,15 @@ async function handleImport(event) {
 
       <div class="field">
         <label>日付</label>
-        <input v-model="form.date" type="date" required />
+        <VueDatePicker
+          v-model="form.date"
+          model-type="yyyy-MM-dd"
+          format="yyyy-MM-dd"
+          :locale="ja"
+          :enable-time-picker="false"
+          :clearable="false"
+          auto-apply
+        />
         <p v-if="formErrors.date" class="error">{{ formErrors.date }}</p>
       </div>
 
@@ -257,12 +266,26 @@ async function handleImport(event) {
 
       <div class="field">
         <label>期間（から）</label>
-        <input v-model="filters.from" type="date" />
+        <VueDatePicker
+          v-model="filters.from"
+          model-type="yyyy-MM-dd"
+          format="yyyy-MM-dd"
+          :locale="ja"
+          :enable-time-picker="false"
+          auto-apply
+        />
       </div>
 
       <div class="field">
         <label>期間（まで）</label>
-        <input v-model="filters.to" type="date" />
+        <VueDatePicker
+          v-model="filters.to"
+          model-type="yyyy-MM-dd"
+          format="yyyy-MM-dd"
+          :locale="ja"
+          :enable-time-picker="false"
+          auto-apply
+        />
       </div>
 
       <div class="field">

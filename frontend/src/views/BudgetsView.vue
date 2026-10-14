@@ -7,6 +7,7 @@ import {
   updateBudget,
 } from "../api/budgets";
 import { fetchCategories } from "../api/categories";
+import { ja } from "date-fns/locale";
 
 const STATUS_COLORS = {
   good: "#0ca30c",
@@ -120,7 +121,15 @@ async function removeBudget(id) {
 
     <div class="field month-field">
       <label>対象月</label>
-      <input v-model="month" type="month" />
+      <VueDatePicker
+        v-model="month"
+        month-picker
+        model-type="yyyy-MM"
+        format="yyyy-MM"
+        :locale="ja"
+        :clearable="false"
+        auto-apply
+      />
     </div>
 
     <form class="budget-form" @submit.prevent="submitForm">
