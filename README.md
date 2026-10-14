@@ -2,7 +2,7 @@
 
 講座課題として1から作成した、個人用の家計簿Webアプリです。日々の収支を記録し、カテゴリ別・月別に集計、グラフ表示や予算管理、CSV入出力ができます。
 
-企画・要件定義の詳細は [docs/proposal.md](docs/proposal.md)・[docs/requirements.md](docs/requirements.md) を参照してください。
+企画・要件定義の詳細は [docs/proposal.md](docs/proposal.md)・[docs/requirements.md](docs/requirements.md) を、AWSへのデプロイ手順は [docs/deployment.md](docs/deployment.md) を参照してください。
 
 ## 主な機能
 
