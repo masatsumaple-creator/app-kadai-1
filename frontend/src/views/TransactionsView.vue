@@ -21,7 +21,13 @@ function emptyForm() {
   return { date: "", type: "expense", category_id: "", amount: "", memo: "" };
 }
 
+function emptyFilters() {
+  return { from: "", to: "", category_id: "", type: "", keyword: "" };
+}
+
 const form = reactive(emptyForm());
+const filters = reactive(emptyFilters());
+const filterError = ref("");
 
 const filteredCategories = computed(() =>
   categories.value.filter((c) => c.type === form.type)
@@ -35,11 +41,24 @@ const categoryNameById = computed(() => {
   return map;
 });
 
+function activeFilterParams() {
+  const params = {};
+  if (filters.from) params.from = filters.from;
+  if (filters.to) params.to = filters.to;
+  if (filters.category_id !== "") params.category_id = filters.category_id;
+  if (filters.type) params.type = filters.type;
+  if (filters.keyword) params.keyword = filters.keyword;
+  return params;
+}
+
 async function loadAll() {
   loading.value = true;
   loadError.value = "";
   try {
-    const [txs, cats] = await Promise.all([fetchTransactions(), fetchCategories()]);
+    const [txs, cats] = await Promise.all([
+      fetchTransactions(activeFilterParams()),
+      fetchCategories(),
+    ]);
     transactions.value = txs;
     categories.value = cats;
   } catch (e) {
@@ -47,6 +66,23 @@ async function loadAll() {
   } finally {
     loading.value = false;
   }
+}
+
+async function applyFilters() {
+  filterError.value = "";
+  try {
+    transactions.value = await fetchTransactions(activeFilterParams());
+  } catch (e) {
+    filterError.value = e.response?.data?.errors
+      ? Object.values(e.response.data.errors).join(" / ")
+      : "絞り込みに失敗しました";
+  }
+}
+
+function resetFilters() {
+  Object.assign(filters, emptyFilters());
+  filterError.value = "";
+  applyFilters();
 }
 
 onMounted(loadAll);
@@ -86,7 +122,7 @@ async function submitForm() {
       await createTransaction(payload);
     }
     cancelEdit();
-    await loadAll();
+    await applyFilters();
   } catch (e) {
     formErrors.value = e.response?.data?.errors || { form: "登録に失敗しました" };
   } finally {
@@ -97,7 +133,7 @@ async function submitForm() {
 async function removeTransaction(id) {
   if (!confirm("この収支データを削除しますか？")) return;
   await deleteTransaction(id);
-  await loadAll();
+  await applyFilters();
 }
 </script>
 
@@ -155,6 +191,49 @@ async function removeTransaction(id) {
       </div>
     </form>
 
+    <form class="filter-form" @submit.prevent="applyFilters">
+      <h2>絞り込み</h2>
+
+      <div class="field">
+        <label>期間（から）</label>
+        <input v-model="filters.from" type="date" />
+      </div>
+
+      <div class="field">
+        <label>期間（まで）</label>
+        <input v-model="filters.to" type="date" />
+      </div>
+
+      <div class="field">
+        <label>種別</label>
+        <select v-model="filters.type">
+          <option value="">すべて</option>
+          <option value="expense">支出</option>
+          <option value="income">収入</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>カテゴリ</label>
+        <select v-model="filters.category_id">
+          <option value="">すべて</option>
+          <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>キーワード（メモ）</label>
+        <input v-model="filters.keyword" type="text" placeholder="例: スーパー" />
+      </div>
+
+      <div class="actions">
+        <button type="submit">絞り込む</button>
+        <button type="button" @click="resetFilters">リセット</button>
+      </div>
+
+      <p v-if="filterError" class="error">{{ filterError }}</p>
+    </form>
+
     <p v-if="loading">読み込み中...</p>
     <p v-else-if="loadError" class="error">{{ loadError }}</p>
 
@@ -204,6 +283,23 @@ async function removeTransaction(id) {
 .tx-form h2 {
   flex-basis: 100%;
   font-size: 1.1rem;
+  margin: 0;
+}
+
+.filter-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+}
+
+.filter-form h2 {
+  flex-basis: 100%;
+  font-size: 1rem;
   margin: 0;
 }
 
