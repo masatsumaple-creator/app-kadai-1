@@ -16,7 +16,8 @@
 .app-header {
   display: flex;
   align-items: center;
-  gap: 2rem;
+  flex-wrap: wrap;
+  gap: 0.75rem 2rem;
   padding: 1rem 1.5rem;
   background: linear-gradient(90deg, var(--accent), var(--teal));
   color: #ffffff;
@@ -51,5 +52,16 @@
   background: rgba(255, 255, 255, 0.25);
   font-weight: 600;
   opacity: 1;
+}
+
+@media (max-width: 480px) {
+  .app-header {
+    padding: 0.75rem 1rem;
+  }
+
+  .app-nav a {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.9rem;
+  }
 }
 </style>

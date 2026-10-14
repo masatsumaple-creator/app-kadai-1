@@ -247,6 +247,7 @@ async function handleImport(event) {
             @change="handleImport"
           />
         </label>
+        <span v-if="importing">インポート中...</span>
       </div>
       <div v-if="importResult" class="import-result">
         <p v-if="importResult.message" class="error">{{ importResult.message }}</p>
@@ -321,7 +322,8 @@ async function handleImport(event) {
     <p v-if="loading">読み込み中...</p>
     <p v-else-if="loadError" class="error">{{ loadError }}</p>
 
-    <table v-else class="tx-table">
+    <div v-else class="table-scroll">
+    <table class="tx-table">
       <thead>
         <tr>
           <th>日付</th>
@@ -349,6 +351,7 @@ async function handleImport(event) {
         </tr>
       </tbody>
     </table>
+    </div>
   </section>
 </template>
 
@@ -433,6 +436,10 @@ async function handleImport(event) {
   color: #c0392b;
   font-size: 0.85rem;
   margin: 0;
+}
+
+.table-scroll {
+  overflow-x: auto;
 }
 
 .tx-table {
