@@ -12,6 +12,7 @@ import {
 } from "chart.js";
 import { fetchMonthlySummary, fetchMonthlyTrend } from "../api/summary";
 import { fetchCategories } from "../api/categories";
+import { ja } from "date-fns/locale";
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Legend, Tooltip, ArcElement);
 
@@ -118,7 +119,15 @@ watch(month, loadSummary);
 
     <div class="field month-field">
       <label>対象月</label>
-      <input v-model="month" type="month" />
+      <VueDatePicker
+        v-model="month"
+        month-picker
+        model-type="yyyy-MM"
+        format="yyyy-MM"
+        :locale="ja"
+        :clearable="false"
+        auto-apply
+      />
     </div>
 
     <p v-if="loading">読み込み中...</p>
@@ -126,15 +135,15 @@ watch(month, loadSummary);
 
     <template v-else>
       <div class="totals">
-        <div class="stat-tile">
+        <div class="stat-tile stat-income">
           <span class="stat-label">収入</span>
           <span class="stat-value">{{ summary.income_total.toLocaleString() }}</span>
         </div>
-        <div class="stat-tile">
+        <div class="stat-tile stat-expense">
           <span class="stat-label">支出</span>
           <span class="stat-value">{{ summary.expense_total.toLocaleString() }}</span>
         </div>
-        <div class="stat-tile">
+        <div class="stat-tile stat-balance">
           <span class="stat-label">差額</span>
           <span class="stat-value">{{ summary.balance.toLocaleString() }}</span>
         </div>
@@ -217,10 +226,24 @@ watch(month, loadSummary);
   flex: 1;
   padding: 1rem;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-left: 4px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+}
+
+.stat-income {
+  border-left-color: var(--teal);
+}
+
+.stat-expense {
+  border-left-color: var(--coral);
+}
+
+.stat-balance {
+  border-left-color: var(--accent);
 }
 
 .stat-label {
