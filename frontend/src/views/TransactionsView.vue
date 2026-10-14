@@ -1,8 +1,238 @@
-<script setup></script>
+<script setup>
+import { computed, onMounted, reactive, ref } from "vue";
+import {
+  createTransaction,
+  deleteTransaction,
+  fetchTransactions,
+  updateTransaction,
+} from "../api/transactions";
+import { fetchCategories } from "../api/categories";
+
+const transactions = ref([]);
+const categories = ref([]);
+const loading = ref(true);
+const loadError = ref("");
+
+const editingId = ref(null);
+const formErrors = ref({});
+const submitting = ref(false);
+
+function emptyForm() {
+  return { date: "", type: "expense", category_id: "", amount: "", memo: "" };
+}
+
+const form = reactive(emptyForm());
+
+const filteredCategories = computed(() =>
+  categories.value.filter((c) => c.type === form.type)
+);
+
+const categoryNameById = computed(() => {
+  const map = {};
+  for (const c of categories.value) {
+    map[c.id] = c.name;
+  }
+  return map;
+});
+
+async function loadAll() {
+  loading.value = true;
+  loadError.value = "";
+  try {
+    const [txs, cats] = await Promise.all([fetchTransactions(), fetchCategories()]);
+    transactions.value = txs;
+    categories.value = cats;
+  } catch (e) {
+    loadError.value = "データの取得に失敗しました。バックエンドが起動しているか確認してください。";
+  } finally {
+    loading.value = false;
+  }
+}
+
+onMounted(loadAll);
+
+function startEdit(tx) {
+  editingId.value = tx.id;
+  form.date = tx.date;
+  form.type = tx.type;
+  form.category_id = tx.category_id ?? "";
+  form.amount = tx.amount;
+  form.memo = tx.memo ?? "";
+  formErrors.value = {};
+}
+
+function cancelEdit() {
+  editingId.value = null;
+  Object.assign(form, emptyForm());
+  formErrors.value = {};
+}
+
+async function submitForm() {
+  formErrors.value = {};
+  submitting.value = true;
+
+  const payload = {
+    date: form.date,
+    type: form.type,
+    category_id: form.category_id === "" ? null : Number(form.category_id),
+    amount: form.amount === "" ? null : Number(form.amount),
+    memo: form.memo || null,
+  };
+
+  try {
+    if (editingId.value) {
+      await updateTransaction(editingId.value, payload);
+    } else {
+      await createTransaction(payload);
+    }
+    cancelEdit();
+    await loadAll();
+  } catch (e) {
+    formErrors.value = e.response?.data?.errors || { form: "登録に失敗しました" };
+  } finally {
+    submitting.value = false;
+  }
+}
+
+async function removeTransaction(id) {
+  if (!confirm("この収支データを削除しますか？")) return;
+  await deleteTransaction(id);
+  await loadAll();
+}
+</script>
 
 <template>
   <section>
     <h1>収支一覧</h1>
-    <p>この画面は次のブランチで実装します。</p>
+
+    <form class="tx-form" @submit.prevent="submitForm">
+      <h2>{{ editingId ? "収支データを編集" : "新規登録" }}</h2>
+
+      <div class="field">
+        <label>日付</label>
+        <input v-model="form.date" type="date" required />
+        <p v-if="formErrors.date" class="error">{{ formErrors.date }}</p>
+      </div>
+
+      <div class="field">
+        <label>種別</label>
+        <select v-model="form.type">
+          <option value="expense">支出</option>
+          <option value="income">収入</option>
+        </select>
+        <p v-if="formErrors.type" class="error">{{ formErrors.type }}</p>
+      </div>
+
+      <div class="field">
+        <label>カテゴリ</label>
+        <select v-model="form.category_id">
+          <option value="">未分類</option>
+          <option v-for="c in filteredCategories" :key="c.id" :value="c.id">
+            {{ c.name }}
+          </option>
+        </select>
+        <p v-if="formErrors.category_id" class="error">{{ formErrors.category_id }}</p>
+      </div>
+
+      <div class="field">
+        <label>金額</label>
+        <input v-model="form.amount" type="number" min="0" step="1" required />
+        <p v-if="formErrors.amount" class="error">{{ formErrors.amount }}</p>
+      </div>
+
+      <div class="field">
+        <label>メモ</label>
+        <input v-model="form.memo" type="text" maxlength="255" />
+      </div>
+
+      <p v-if="formErrors.form" class="error">{{ formErrors.form }}</p>
+
+      <div class="actions">
+        <button type="submit" :disabled="submitting">
+          {{ editingId ? "更新" : "登録" }}
+        </button>
+        <button v-if="editingId" type="button" @click="cancelEdit">キャンセル</button>
+      </div>
+    </form>
+
+    <p v-if="loading">読み込み中...</p>
+    <p v-else-if="loadError" class="error">{{ loadError }}</p>
+
+    <table v-else class="tx-table">
+      <thead>
+        <tr>
+          <th>日付</th>
+          <th>種別</th>
+          <th>カテゴリ</th>
+          <th>金額</th>
+          <th>メモ</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="tx in transactions" :key="tx.id">
+          <td>{{ tx.date }}</td>
+          <td>{{ tx.type === "income" ? "収入" : "支出" }}</td>
+          <td>{{ tx.category_id ? categoryNameById[tx.category_id] : "未分類" }}</td>
+          <td>{{ tx.amount.toLocaleString() }}</td>
+          <td>{{ tx.memo }}</td>
+          <td class="row-actions">
+            <button type="button" @click="startEdit(tx)">編集</button>
+            <button type="button" @click="removeTransaction(tx.id)">削除</button>
+          </td>
+        </tr>
+        <tr v-if="transactions.length === 0">
+          <td colspan="6">データがありません</td>
+        </tr>
+      </tbody>
+    </table>
   </section>
 </template>
+
+<style scoped>
+.tx-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.tx-form h2 {
+  flex-basis: 100%;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.error {
+  color: #c0392b;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.tx-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tx-table th,
+.tx-table td {
+  border-bottom: 1px solid var(--border);
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.row-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+</style>
