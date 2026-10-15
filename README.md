@@ -40,6 +40,14 @@ app-kadai-1/
 └── docs/            企画書・要件定義書
 ```
 
+## 動作確認動画
+
+
+https://github.com/user-attachments/assets/272d7c83-b91e-42dc-a9a1-3099443f531d
+
+
+
+
 ## セットアップ
 
 ### 1. データベース（MySQL）を用意する
