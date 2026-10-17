@@ -79,6 +79,27 @@ flowchart LR
 
 詳細は [docs/deployment.md](docs/deployment.md) を参照してください。
 
+## 画面
+
+| 画面 | パス | できること |
+|---|---|---|
+| 収支一覧 | `/` | 収支データの登録・編集・削除、期間/カテゴリ/キーワードでの絞り込み、CSV入出力 |
+| カテゴリ管理 | `/categories` | カテゴリの登録・編集・削除 |
+| 集計・レポート | `/summary` | 月別の収入・支出・差額、カテゴリ別支出の円グラフ、月別収支推移の棒グラフ |
+| 予算設定 | `/budgets` | カテゴリ別の月間予算登録、使用状況の進捗バー表示 |
+
+## 主要API
+
+バックエンドは `/api` 配下にREST APIを提供しています。全エンドポイントの一覧は [docs/requirements.md の API一覧](docs/requirements.md#7-api一覧概要案) を参照してください。
+
+| メソッド | パス | 概要 |
+|---|---|---|
+| GET | `/api/transactions` | 収支データ一覧（絞り込み対応） |
+| POST | `/api/transactions` | 収支データ登録 |
+| GET | `/api/categories` | カテゴリ一覧 |
+| GET | `/api/summary?month=YYYY-MM` | 月別・カテゴリ別集計 |
+| GET | `/api/budgets?month=YYYY-MM` | 予算と使用状況の一覧 |
+
 ## 動作確認動画
 
 
@@ -175,6 +196,22 @@ pytest
 cd frontend
 npm run test
 ```
+
+## よく使うコマンド
+
+| やりたいこと | コマンド（`backend`ディレクトリで実行） |
+|---|---|
+| バックエンド起動 | `python run.py` |
+| DBスキーマを最新化 | `flask db upgrade` |
+| 初期カテゴリを投入 | `flask seed` |
+| モデル変更後のマイグレーション作成 | `flask db migrate -m "説明"` |
+| バックエンドのテスト実行 | `pytest` |
+
+| やりたいこと | コマンド（`frontend`ディレクトリで実行） |
+|---|---|
+| フロントエンド起動（開発用） | `npm run dev` |
+| 本番用にビルド | `npm run build` |
+| フロントエンドのテスト実行 | `npm run test` |
 
 ## 開発の進め方
 
