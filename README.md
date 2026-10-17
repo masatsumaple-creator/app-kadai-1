@@ -90,7 +90,7 @@ flowchart LR
 
 ## 主要API
 
-バックエンドは `/api` 配下にREST APIを提供しています。全エンドポイントの一覧は [docs/requirements.md の API一覧](docs/requirements.md#7-api一覧概要案) を参照してください。
+バックエンドは `/api` 配下にREST APIを提供しています。全エンドポイントの一覧は [docs/requirements.md](docs/requirements.md) の「API一覧」セクションを参照してください。
 
 | メソッド | パス | 概要 |
 |---|---|---|
