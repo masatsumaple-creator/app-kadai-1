@@ -54,6 +54,31 @@ app-kadai-1/
 └── docs/            企画書・要件定義書
 ```
 
+## システム構成
+
+フロントエンド（Vue SPA）とバックエンド（Flask API）を分離し、REST APIで連携する構成です。
+
+### ローカル開発環境
+
+```mermaid
+flowchart LR
+    Browser["ブラウザ"] -->|"http://localhost:5173"| Vite["Vite Dev Server<br/>(Vue 3 SPA)"]
+    Vite -->|"Axios: /api/*<br/>http://127.0.0.1:5000/api"| Flask["Flask Dev Server<br/>(python run.py)"]
+    Flask -->|SQLAlchemy| DB[("MySQL")]
+```
+
+### AWS本番環境（デプロイ確認時）
+
+```mermaid
+flowchart LR
+    Browser["ブラウザ"] -->|"http://&lt;EC2 Public IP&gt;"| Nginx["nginx :80"]
+    Nginx -->|"静的ファイル配信"| Dist["Vue build (dist/)"]
+    Nginx -->|"/api/* を<br/>proxy_pass"| Gunicorn["gunicorn :8000<br/>(Flask, systemdで常駐)"]
+    Gunicorn -->|SQLAlchemy| MariaDB[("MariaDB :3306<br/>(localhostのみ)")]
+```
+
+詳細は [docs/deployment.md](docs/deployment.md) を参照してください。
+
 ## 動作確認動画
 
 
