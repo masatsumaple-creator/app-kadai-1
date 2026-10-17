@@ -17,12 +17,26 @@
 
 ## 技術スタック
 
-| レイヤー | 技術 |
-|---|---|
-| フロントエンド | Vue.js 3 + Vite、Vue Router、Axios、Chart.js、@vuepic/vue-datepicker |
-| バックエンド | Python + Flask、SQLAlchemy、Flask-Migrate |
-| データベース | MySQL |
-| テスト | pytest（バックエンド）、Vitest + @vue/test-utils（フロントエンド） |
+| レイヤー | 技術 | バージョン |
+|---|---|---|
+| 実行環境 | Python | 3.14 |
+| 実行環境 | Node.js | 24.x |
+| フロントエンド | Vue.js | 3.5 |
+| フロントエンド | Vite | 8.3 |
+| フロントエンド | Vue Router | 4.6 |
+| フロントエンド | Axios | 1.20 |
+| フロントエンド | Chart.js / vue-chartjs | 4.5 / 5.3 |
+| フロントエンド | @vuepic/vue-datepicker | 14.0 |
+| バックエンド | Flask | 3.1 |
+| バックエンド | Flask-SQLAlchemy | 3.1 |
+| バックエンド | Flask-Migrate | 4.0 |
+| バックエンド | Flask-Cors | 5.0 |
+| バックエンド | PyMySQL | 1.1 |
+| データベース | MySQL | 8.0（本番/Docker）、開発時はMariaDB 10.5互換で動作確認済み |
+| テスト | pytest | 8.3 |
+| テスト | Vitest / @vue/test-utils | 5.0 / 2.5 |
+
+正確なバージョン指定は [backend/requirements.txt](backend/requirements.txt)・[frontend/package.json](frontend/package.json) を参照してください。
 
 ## ディレクトリ構成
 
